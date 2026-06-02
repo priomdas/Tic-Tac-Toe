@@ -1,3 +1,4 @@
+import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { MessageCircle, MessageSquare, Send, X } from './Icons';
 
