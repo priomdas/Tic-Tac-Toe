@@ -12,6 +12,8 @@ export function useGame() {
   const [players, setPlayers] = useState([]);
   const [roomCode, setRoomCode] = useState(null);
   const [opponentLeft, setOpponentLeft] = useState(false);
+  const [gameMode, setGameMode] = useState('classic');
+  const [moveHistory, setMoveHistory] = useState([]);
 
   useEffect(() => {
     const handleGameUpdate = (data) => {
@@ -24,6 +26,8 @@ export function useGame() {
       if (data.players) {
         setPlayers(data.players);
       }
+      if (data.gameMode) setGameMode(data.gameMode);
+      if (data.moveHistory) setMoveHistory(data.moveHistory);
     };
 
     const handleGameOver = (data) => {
@@ -31,6 +35,7 @@ export function useGame() {
       setWinningLine(data.winningLine);
       setScores(data.scores);
       setBoard(data.board);
+      if (data.moveHistory) setMoveHistory(data.moveHistory);
       setGameStatus('finished');
     };
 
@@ -40,6 +45,7 @@ export function useGame() {
       setWinner(null);
       setWinningLine(null);
       setGameStatus(data.gameStatus);
+      if (data.moveHistory) setMoveHistory(data.moveHistory);
       setOpponentLeft(false);
     };
 
@@ -68,14 +74,16 @@ export function useGame() {
     };
   }, []);
 
-  const createRoom = useCallback((playerName) => {
+  const createRoom = useCallback((playerName, mode = 'classic') => {
     return new Promise((resolve) => {
-      socket.emit('create-room', { playerName }, (response) => {
+      socket.emit('create-room', { playerName, gameMode: mode }, (response) => {
         if (response.success) {
           setRoomCode(response.roomCode);
           setPlayerSymbol(response.playerSymbol);
           setPlayers(response.room.players);
           setGameStatus(response.room.gameStatus);
+          if (response.room.gameMode) setGameMode(response.room.gameMode);
+          if (response.room.moveHistory) setMoveHistory(response.room.moveHistory);
         }
         resolve(response);
       });
@@ -92,6 +100,8 @@ export function useGame() {
           setGameStatus(response.room.gameStatus);
           setBoard(response.room.board);
           setScores(response.room.scores);
+          if (response.room.gameMode) setGameMode(response.room.gameMode);
+          if (response.room.moveHistory) setMoveHistory(response.room.moveHistory);
         }
         resolve(response);
       });
@@ -125,6 +135,7 @@ export function useGame() {
     setPlayerSymbol(null);
     setPlayers([]);
     setRoomCode(null);
+    setMoveHistory([]);
     setOpponentLeft(false);
   }, []);
 
@@ -142,6 +153,8 @@ export function useGame() {
     roomCode,
     opponentLeft,
     isMyTurn,
+    gameMode,
+    moveHistory,
     createRoom,
     joinRoom,
     makeMove,

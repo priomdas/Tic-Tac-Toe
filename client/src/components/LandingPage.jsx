@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Cpu, Gamepad, Link2, Loader, ArrowRight, ArrowLeft, Check, Copy, Zap } from './Icons';
+import { Cpu, Gamepad, Link2, Loader, ArrowRight, ArrowLeft, Check, Copy, Zap, RefreshCw } from './Icons';
 
 export default function LandingPage({ onCreateRoom, onJoinRoom, onPlayAI }) {
   const [playerName, setPlayerName] = useState('');
@@ -11,14 +11,14 @@ export default function LandingPage({ onCreateRoom, onJoinRoom, onPlayAI }) {
   const [isLoading, setIsLoading] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  const handleCreate = async () => {
+  const handleCreate = async (selectedMode) => {
     if (!playerName.trim()) {
       setError('Please enter your name');
       return;
     }
     setError('');
     setIsLoading(true);
-    const result = await onCreateRoom(playerName.trim());
+    const result = await onCreateRoom(playerName.trim(), selectedMode);
     setIsLoading(false);
     if (result.success) {
       setRoomCode(result.roomCode);
@@ -151,17 +151,33 @@ export default function LandingPage({ onCreateRoom, onJoinRoom, onPlayAI }) {
               </div>
 
               {/* Multiplayer Options */}
-              <button
-                onClick={() => {
-                  setError('');
-                  handleCreate();
-                }}
-                className="btn-secondary w-full text-center flex items-center justify-center gap-2"
-                id="create-room-btn"
-                disabled={isLoading}
-              >
-                {isLoading ? <><Loader size={16} /> Creating...</> : <><Gamepad size={18} /> Create Room</>}
-              </button>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  onClick={() => {
+                    setError('');
+                    handleCreate('classic');
+                  }}
+                  className="btn-secondary text-center flex flex-col items-center justify-center gap-1.5 p-3"
+                  id="create-classic-btn"
+                  disabled={isLoading}
+                >
+                  <Gamepad size={18} />
+                  <span className="text-xs">Classic Room</span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    setError('');
+                    handleCreate('loop');
+                  }}
+                  className="btn-secondary text-center flex flex-col items-center justify-center gap-1.5 p-3"
+                  id="create-loop-btn"
+                  disabled={isLoading}
+                >
+                  <RefreshCw size={18} />
+                  <span className="text-xs">Loop Room</span>
+                </button>
+              </div>
 
               <button
                 onClick={() => {

@@ -36,6 +36,8 @@ function createRoomState() {
     gameStatus: 'waiting', // waiting | playing | finished
     chatHistory: [],
     roundStarter: 'X',     // alternates each round
+    gameMode: 'classic',   // 'classic' | 'loop'
+    moveHistory: [],       // Array of { symbol, index }
   };
 }
 
@@ -64,9 +66,13 @@ io.on('connection', (socket) => {
   console.log(`⚡ Client connected: ${socket.id}`);
 
   // ── Create Room ─────────────────────────────────────────────
-  socket.on('create-room', ({ playerName }, callback) => {
+  socket.on('create-room', ({ playerName, gameMode }, callback) => {
     const roomCode = generateRoomCode();
     const room = createRoomState();
+    
+    if (gameMode === 'loop') {
+      room.gameMode = 'loop';
+    }
 
     room.players.push({
       id: socket.id,
@@ -155,6 +161,23 @@ io.on('connection', (socket) => {
       return callback?.({ success: false, message: 'Invalid move.' });
     }
 
+    // Apply FIFO logic if loop mode
+    if (room.gameMode === 'loop') {
+      // Count player's pieces on board
+      const playerMoves = room.moveHistory.filter((m) => m.symbol === socket.playerSymbol);
+      if (playerMoves.length >= 3) {
+        // Find the oldest move for this player
+        const oldestMove = playerMoves[0];
+        // Remove it from the board
+        room.board[oldestMove.index] = null;
+        // Remove it from the history
+        room.moveHistory = room.moveHistory.filter((m) => m !== oldestMove);
+      }
+      
+      // Add the new move to history
+      room.moveHistory.push({ symbol: socket.playerSymbol, index });
+    }
+
     // Apply move
     room.board[index] = socket.playerSymbol;
 
@@ -196,6 +219,7 @@ io.on('connection', (socket) => {
     room.winner = null;
     room.winningLine = null;
     room.gameStatus = room.players.length === 2 ? 'playing' : 'waiting';
+    room.moveHistory = [];
 
     // Alternate who starts
     room.roundStarter = room.roundStarter === 'X' ? 'O' : 'X';
@@ -267,6 +291,7 @@ io.on('connection', (socket) => {
       room.winner = null;
       room.winningLine = null;
       room.currentTurn = 'X';
+      room.moveHistory = [];
 
       io.to(roomCode).emit('opponent-disconnected', {
         message: `${disconnectedPlayer?.name || 'Opponent'} has left the game.`,
@@ -286,6 +311,8 @@ function sanitizeRoom(room) {
     winner: room.winner,
     winningLine: room.winningLine,
     gameStatus: room.gameStatus,
+    gameMode: room.gameMode,
+    moveHistory: room.moveHistory,
   };
 }
 

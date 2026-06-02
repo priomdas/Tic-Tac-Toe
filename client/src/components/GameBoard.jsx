@@ -1,8 +1,19 @@
 import { motion } from 'motion/react';
 import Cell from './Cell';
 
-export default function GameBoard({ board, winningLine, isMyTurn, gameStatus, onMakeMove }) {
+export default function GameBoard({ board, winningLine, isMyTurn, gameStatus, gameMode, moveHistory, onMakeMove }) {
   const isDisabled = !isMyTurn || gameStatus !== 'playing';
+
+  // Find oldest moves for both players in loop mode
+  let oldestXIndex = -1;
+  let oldestOIndex = -1;
+
+  if (gameMode === 'loop' && Array.isArray(moveHistory)) {
+    const xMoves = moveHistory.filter(m => m.symbol === 'X');
+    const oMoves = moveHistory.filter(m => m.symbol === 'O');
+    if (xMoves.length === 3) oldestXIndex = xMoves[0].index;
+    if (oMoves.length === 3) oldestOIndex = oMoves[0].index;
+  }
 
   return (
     <motion.div
@@ -21,6 +32,7 @@ export default function GameBoard({ board, winningLine, isMyTurn, gameStatus, on
             onClick={onMakeMove}
             isWinning={winningLine?.includes(index)}
             isDisabled={isDisabled}
+            isOldest={index === oldestXIndex || index === oldestOIndex}
           />
         ))}
       </div>

@@ -80,9 +80,11 @@ export default function GameRoom({
               <ArrowLeft size={14} /> Leave
             </button>
             <div className="h-4 w-px bg-white/[0.08]" />
-            <div className="text-xs text-text-muted">
-              Room{' '}
-              <span className="font-display text-neon-cyan/70 tracking-wider">{roomCode}</span>
+            <div className="text-xs text-text-muted flex items-center gap-2">
+              <span>Room <span className="font-display text-neon-cyan/70 tracking-wider">{roomCode}</span></span>
+              <span className="bg-white/5 px-2 py-0.5 rounded-md text-[10px] uppercase tracking-widest text-text-secondary border border-white/10">
+                {gameMode === 'loop' ? 'Loop Mode' : 'Classic'}
+              </span>
             </div>
           </div>
 
@@ -170,6 +172,8 @@ export default function GameRoom({
           isMyTurn={isMyTurn}
           gameStatus={gameStatus}
           onMakeMove={makeMove}
+          gameMode={gameMode}
+          moveHistory={moveHistory}
         />
 
         {/* Playing As */}

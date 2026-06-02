@@ -1,6 +1,6 @@
 import { motion } from 'motion/react';
 
-export default function Cell({ value, index, onClick, isWinning, isDisabled }) {
+export default function Cell({ value, index, onClick, isWinning, isDisabled, isOldest }) {
   const renderMark = () => {
     if (!value) return null;
 
@@ -8,7 +8,7 @@ export default function Cell({ value, index, onClick, isWinning, isDisabled }) {
       return (
         <motion.svg
           viewBox="0 0 100 100"
-          className="w-12 h-12 sm:w-16 sm:h-16"
+          className={`w-12 h-12 sm:w-16 sm:h-16 ${isOldest && !isWinning ? 'opacity-40 animate-pulse' : ''}`}
           initial={{ scale: 0, rotate: -180 }}
           animate={{ scale: 1, rotate: 0 }}
           transition={{ type: 'spring', stiffness: 260, damping: 20 }}
@@ -44,7 +44,7 @@ export default function Cell({ value, index, onClick, isWinning, isDisabled }) {
     return (
       <motion.svg
         viewBox="0 0 100 100"
-        className="w-12 h-12 sm:w-16 sm:h-16"
+        className={`w-12 h-12 sm:w-16 sm:h-16 ${isOldest && !isWinning ? 'opacity-40 animate-pulse' : ''}`}
         initial={{ scale: 0, rotate: 180 }}
         animate={{ scale: 1, rotate: 0 }}
         transition={{ type: 'spring', stiffness: 260, damping: 20 }}
@@ -82,6 +82,7 @@ export default function Cell({ value, index, onClick, isWinning, isDisabled }) {
         }
         ${isDisabled && !value ? 'opacity-50 cursor-not-allowed' : ''}
         ${isWinning ? (value === 'X' ? 'animate-neon-pulse-cyan' : 'animate-neon-pulse-magenta') : ''}
+        ${isOldest && !isWinning ? 'border-dashed opacity-70' : ''}
       `}
       style={{
         background: isWinning
