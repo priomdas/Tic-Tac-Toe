@@ -76,7 +76,12 @@ export function useGame() {
 
   const createRoom = useCallback((playerName, mode = 'classic') => {
     return new Promise((resolve) => {
+      const timeout = setTimeout(() => {
+        resolve({ success: false, message: 'Server is waking up. Please try again in 5 seconds.' });
+      }, 5000);
+
       socket.emit('create-room', { playerName, gameMode: mode }, (response) => {
+        clearTimeout(timeout);
         if (response.success) {
           setRoomCode(response.roomCode);
           setPlayerSymbol(response.playerSymbol);
@@ -92,7 +97,12 @@ export function useGame() {
 
   const joinRoom = useCallback((code, playerName) => {
     return new Promise((resolve) => {
+      const timeout = setTimeout(() => {
+        resolve({ success: false, message: 'Server is waking up. Please try again in 5 seconds.' });
+      }, 5000);
+
       socket.emit('join-room', { roomCode: code, playerName }, (response) => {
+        clearTimeout(timeout);
         if (response.success) {
           setRoomCode(response.roomCode);
           setPlayerSymbol(response.playerSymbol);

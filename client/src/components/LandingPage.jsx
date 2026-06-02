@@ -102,9 +102,6 @@ export default function LandingPage({ onCreateRoom, onJoinRoom, onPlayAI }) {
             className="input-glass"
             maxLength={20}
             id="player-name-input"
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !mode) setMode('create');
-            }}
           />
         </motion.div>
 

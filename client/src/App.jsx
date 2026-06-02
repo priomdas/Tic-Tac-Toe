@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import ParticleBackground from './components/ParticleBackground';
 import LandingPage from './components/LandingPage';
 import GameRoom from './components/GameRoom';
@@ -13,11 +13,15 @@ export default function App() {
   const chat = useChat();
   const voice = useVoiceChat(game.roomCode, game.playerSymbol);
 
-  const handleCreateRoom = async (playerName) => {
-    const result = await game.createRoom(playerName);
-    if (result.success) {
+  // Automatically switch to game view when both players are in the room
+  useEffect(() => {
+    if (game.players.length === 2 && view === 'landing') {
       setView('game');
     }
+  }, [game.players.length, view]);
+
+  const handleCreateRoom = async (playerName, mode) => {
+    const result = await game.createRoom(playerName, mode);
     return result;
   };
 
