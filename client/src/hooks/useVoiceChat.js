@@ -11,6 +11,7 @@ export function useVoiceChat(roomCode, playerSymbol) {
   const localStreamRef = useRef(null);
   const remoteAudioRef = useRef(null);
   const currentCallRef = useRef(null);
+  const pendingCallRef = useRef(null);
 
   // Initialize peer when entering a room
   useEffect(() => {
@@ -28,17 +29,76 @@ export function useVoiceChat(roomCode, playerSymbol) {
 
     peer.on('call', async (call) => {
       console.log('📞 Incoming call...');
-      setConnectionStatus('connecting');
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
-        localStreamRef.current = stream;
+      if (localStreamRef.current) {
+        // We are already ready, answer immediately
+        setConnectionStatus('connecting');
+        call.answer(localStreamRef.current);
+        currentCallRef.current = call;
+        
+        call.on('stream', (remoteStream) => {
+          playRemoteAudio(remoteStream);
+          setIsConnected(true);
+          setConnectionStatus('connected');
+        });
+        
+        call.on('close', () => {
+          setIsConnected(false);
+          setConnectionStatus('idle');
+        });
+      } else {
+        // Save pending call to answer when user clicks Start Voice
+        pendingCallRef.current = call;
+      }
+    });
 
-        // Start muted
-        stream.getAudioTracks().forEach((track) => {
-          track.enabled = false;
+    peer.on('error', (err) => {
+      console.error('PeerJS error:', err);
+      if (err.type !== 'peer-unavailable') {
+        setConnectionStatus('failed');
+      }
+    });
+
+    return () => {
+      cleanupVoice();
+      peer.destroy();
+    };
+  }, [roomCode, playerSymbol]);
+
+  const initiateCall = useCallback(async () => {
+    if (!peerRef.current || !roomCode) return;
+
+    setConnectionStatus('connecting');
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+      localStreamRef.current = stream;
+
+      // Start muted
+      stream.getAudioTracks().forEach((track) => {
+        track.enabled = false;
+      });
+
+      if (pendingCallRef.current) {
+        // Answer pending call
+        const call = pendingCallRef.current;
+        call.answer(stream);
+        currentCallRef.current = call;
+        pendingCallRef.current = null;
+
+        call.on('stream', (remoteStream) => {
+          playRemoteAudio(remoteStream);
+          setIsConnected(true);
+          setConnectionStatus('connected');
         });
 
-        call.answer(stream);
+        call.on('close', () => {
+          setIsConnected(false);
+          setConnectionStatus('idle');
+        });
+      } else {
+        // Initiate new call
+        const remotePeerId = playerSymbol === 'X' ? `ttt-${roomCode}-O` : `ttt-${roomCode}-X`;
+        const call = peerRef.current.call(remotePeerId, stream);
         currentCallRef.current = call;
 
         call.on('stream', (remoteStream) => {
@@ -56,59 +116,7 @@ export function useVoiceChat(roomCode, playerSymbol) {
           console.error('Call error:', err);
           setConnectionStatus('failed');
         });
-      } catch (err) {
-        console.error('Failed to get audio:', err);
-        setConnectionStatus('failed');
       }
-    });
-
-    peer.on('error', (err) => {
-      console.error('PeerJS error:', err);
-      if (err.type !== 'peer-unavailable') {
-        setConnectionStatus('failed');
-      }
-    });
-
-    return () => {
-      cleanupVoice();
-      peer.destroy();
-    };
-  }, [roomCode, playerSymbol]);
-
-  // Player X initiates the call when both players are in the room
-  const initiateCall = useCallback(async () => {
-    if (!peerRef.current || !roomCode || playerSymbol !== 'X') return;
-
-    const remotePeerId = `ttt-${roomCode}-O`;
-    setConnectionStatus('connecting');
-
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
-      localStreamRef.current = stream;
-
-      // Start muted
-      stream.getAudioTracks().forEach((track) => {
-        track.enabled = false;
-      });
-
-      const call = peerRef.current.call(remotePeerId, stream);
-      currentCallRef.current = call;
-
-      call.on('stream', (remoteStream) => {
-        playRemoteAudio(remoteStream);
-        setIsConnected(true);
-        setConnectionStatus('connected');
-      });
-
-      call.on('close', () => {
-        setIsConnected(false);
-        setConnectionStatus('idle');
-      });
-
-      call.on('error', (err) => {
-        console.error('Call error:', err);
-        setConnectionStatus('failed');
-      });
     } catch (err) {
       console.error('Failed to get audio:', err);
       setConnectionStatus('failed');
