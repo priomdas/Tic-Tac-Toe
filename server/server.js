@@ -113,9 +113,8 @@ io.on('connection', (socket) => {
       symbol: 'O',
     });
 
-    const firstTurn = Math.random() < 0.5 ? 'X' : 'O';
-    room.currentTurn = firstTurn;
-    room.roundStarter = firstTurn;
+    room.currentTurn = 'X';
+    room.roundStarter = 'X';
     room.gameStatus = 'playing';
 
     socket.join(code);
