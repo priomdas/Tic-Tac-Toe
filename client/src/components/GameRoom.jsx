@@ -20,6 +20,7 @@ export default function GameRoom({
     board, currentTurn, scores, winner, winningLine,
     gameStatus, playerSymbol, players, roomCode,
     isMyTurn, opponentLeft, makeMove, playAgain, leaveRoom,
+    gameMode, moveHistory,
   } = game;
 
   const { messages, sendMessage, setChatOpen } = chat;
