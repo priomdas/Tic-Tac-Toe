@@ -1,7 +1,7 @@
 import { motion } from 'motion/react';
 import { Phone, Mic, MicOff } from './Icons';
 
-export default function VoiceChat({ isMuted, isConnected, connectionStatus, onToggleMute, onInitiateCall }) {
+export default function VoiceChat({ isMuted, isConnected, connectionStatus, remoteAudioRef, onToggleMute, onInitiateCall }) {
   const getStatusColor = () => {
     switch (connectionStatus) {
       case 'connected': return 'bg-neon-green';
@@ -27,6 +27,7 @@ export default function VoiceChat({ isMuted, isConnected, connectionStatus, onTo
       transition={{ delay: 0.3 }}
       className="flex items-center gap-3"
     >
+      <audio ref={remoteAudioRef} autoPlay playsInline />
       {/* Connection Status */}
       <div className="flex items-center gap-2">
         <div className={`w-2 h-2 rounded-full ${getStatusColor()}`} />

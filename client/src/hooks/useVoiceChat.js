@@ -3,7 +3,7 @@ import { Peer } from 'peerjs';
 import socket from '../socket';
 
 export function useVoiceChat(roomCode, playerSymbol) {
-  const [isMuted, setIsMuted] = useState(true);
+  const [isMuted, setIsMuted] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState('idle'); // idle | connecting | connected | failed
 
@@ -73,11 +73,6 @@ export function useVoiceChat(roomCode, playerSymbol) {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
       localStreamRef.current = stream;
 
-      // Start muted
-      stream.getAudioTracks().forEach((track) => {
-        track.enabled = false;
-      });
-
       if (pendingCallRef.current) {
         // Answer pending call
         const call = pendingCallRef.current;
@@ -125,13 +120,8 @@ export function useVoiceChat(roomCode, playerSymbol) {
 
   const playRemoteAudio = (stream) => {
     if (remoteAudioRef.current) {
-      remoteAudioRef.current.pause();
-      remoteAudioRef.current.srcObject = null;
+      remoteAudioRef.current.srcObject = stream;
     }
-    const audio = new Audio();
-    audio.srcObject = stream;
-    audio.play().catch(console.error);
-    remoteAudioRef.current = audio;
   };
 
   const toggleMute = useCallback(() => {
@@ -154,12 +144,10 @@ export function useVoiceChat(roomCode, playerSymbol) {
       localStreamRef.current = null;
     }
     if (remoteAudioRef.current) {
-      remoteAudioRef.current.pause();
       remoteAudioRef.current.srcObject = null;
-      remoteAudioRef.current = null;
     }
     setIsConnected(false);
-    setIsMuted(true);
+    setIsMuted(false);
     setConnectionStatus('idle');
   }, []);
 
@@ -167,6 +155,7 @@ export function useVoiceChat(roomCode, playerSymbol) {
     isMuted,
     isConnected,
     connectionStatus,
+    remoteAudioRef,
     toggleMute,
     initiateCall,
     cleanupVoice,

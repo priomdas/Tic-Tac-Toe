@@ -23,7 +23,7 @@ export default function GameRoom({
   } = game;
 
   const { messages, sendMessage, setChatOpen } = chat;
-  const { isMuted, isConnected, connectionStatus, toggleMute, initiateCall } = voice;
+  const { isMuted, isConnected, connectionStatus, remoteAudioRef, toggleMute, initiateCall } = voice;
 
   // Show disconnect banner
   useEffect(() => {
@@ -91,6 +91,7 @@ export default function GameRoom({
             isMuted={isMuted}
             isConnected={isConnected}
             connectionStatus={connectionStatus}
+            remoteAudioRef={remoteAudioRef}
             onToggleMute={toggleMute}
             onInitiateCall={initiateCall}
           />
